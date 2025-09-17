@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import DomainGrid from '../components/DomainGrid'
+import DomainGrid from '../components/DomainGrid.jsx'
 
 export default function Home() {
   return (
