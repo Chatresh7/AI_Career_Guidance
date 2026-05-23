@@ -31,8 +31,8 @@ export default function Footer() {
 
   const socialLinks = [
     { name: 'Twitter', href: 'https://twitter.com', icon: Twitter },
-    { name: 'LinkedIn', href: 'https://linkedin.com', icon: Linkedin },
-    { name: 'GitHub', href: 'https://github.com', icon: Github }
+    { name: 'LinkedIn', href: 'http://linkedin.com/in/chatresh-konchada-6075692aa/', icon: Linkedin },
+    { name: 'GitHub', href: 'https://github.com/Chatresh7', icon: Github }
   ]
 
   return (
@@ -60,11 +60,11 @@ export default function Footer() {
               </div>
               <div className="flex items-center space-x-3 text-gray-400">
                 <Phone size={18} />
-                <span>+91 79955 70069</span>
+                <span>+91 89195 85579</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-400">
                 <MapPin size={18} />
-                <span>Tekkali, Sklm</span>
+                <span>Palasa, Sklm</span>
               </div>
             </div>
           </div>

@@ -21,7 +21,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1) // 1: auth, 2: onboarding
+  const [currentStep, setCurrentStep] = useState(1)
   
   const [authData, setAuthData] = useState({
     email: '',
@@ -37,6 +37,19 @@ export default function AuthPage() {
     currentStatus: 'student'
   })
 
+  // ✅ Clears all previous user's progress data from localStorage
+  const clearPreviousUserData = () => {
+    const keysToRemove = [
+      'assessmentResults',
+      'performanceData',
+      'resumeAnalysis',
+      'skillGapAnalysis',
+      'onboardingData',
+      'skillGapData'
+    ]
+    keysToRemove.forEach(key => localStorage.removeItem(key))
+  }
+
   const handleAuthChange = (e) => {
     setAuthData({ ...authData, [e.target.name]: e.target.value })
   }
@@ -46,40 +59,35 @@ export default function AuthPage() {
   }
 
   const handleAuthSubmit = () => {
-    
     if (isLogin) {
-      // Login logic
       const users = JSON.parse(localStorage.getItem('users') || '[]')
       const user = users.find(u => u.email === authData.email && u.password === authData.password)
       
       if (user) {
+        // ✅ Clear previous user's data before setting new user
+        clearPreviousUserData()
         localStorage.setItem('currentUser', JSON.stringify(user))
         router.push('/')
       } else {
         alert('Invalid email or password')
       }
     } else {
-      // Signup - validate password match
       if (authData.password !== authData.confirmPassword) {
         alert('Passwords do not match')
         return
       }
       
-      // Check if user already exists
       const users = JSON.parse(localStorage.getItem('users') || '[]')
       if (users.find(u => u.email === authData.email)) {
         alert('User already exists with this email')
         return
       }
       
-      // Move to onboarding step
       setCurrentStep(2)
     }
   }
 
   const handleOnboardingSubmit = () => {
-    
-    // Create new user
     const users = JSON.parse(localStorage.getItem('users') || '[]')
     const newUser = {
       id: Date.now().toString(),
@@ -91,7 +99,15 @@ export default function AuthPage() {
     
     users.push(newUser)
     localStorage.setItem('users', JSON.stringify(users))
+
+    // ✅ Clear any previous user's data before setting new user
+    clearPreviousUserData()
     localStorage.setItem('currentUser', JSON.stringify(newUser))
+    // ✅ Save onboarding data for the new user
+    localStorage.setItem('onboardingData', JSON.stringify({
+      ...onboardingData,
+      completedAt: new Date().toISOString()
+    }))
     
     router.push('/')
   }
@@ -106,7 +122,6 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
       <div className="max-w-2xl mx-auto px-6">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,9 +166,7 @@ export default function AuthPage() {
           className="bg-white rounded-2xl shadow-xl p-8"
         >
           {currentStep === 1 ? (
-            // Authentication Form
             <>
-              {/* Tab Switcher */}
               <div className="flex mb-8">
                 <button
                   onClick={() => setIsLogin(true)}
@@ -178,7 +191,6 @@ export default function AuthPage() {
               </div>
 
               <div className="space-y-6">
-                {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Mail className="w-4 h-4 inline mr-2" />
@@ -195,7 +207,6 @@ export default function AuthPage() {
                   />
                 </div>
 
-                {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Lock className="w-4 h-4 inline mr-2" />
@@ -221,7 +232,6 @@ export default function AuthPage() {
                   </div>
                 </div>
 
-                {/* Confirm Password (Signup only) */}
                 {!isLogin && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -249,7 +259,6 @@ export default function AuthPage() {
                   </div>
                 )}
 
-                {/* Submit Button */}
                 <button
                   onClick={handleAuthSubmit}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
@@ -259,7 +268,6 @@ export default function AuthPage() {
                 </button>
               </div>
 
-              {/* Footer */}
               {isLogin && (
                 <div className="mt-6 text-center">
                   <p className="text-gray-600">
@@ -275,9 +283,7 @@ export default function AuthPage() {
               )}
             </>
           ) : (
-            // Onboarding Form
             <div className="space-y-6">
-              {/* Full Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <User className="w-4 h-4 inline mr-2" />
@@ -294,7 +300,6 @@ export default function AuthPage() {
                 />
               </div>
 
-              {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Phone className="w-4 h-4 inline mr-2" />
@@ -310,7 +315,6 @@ export default function AuthPage() {
                 />
               </div>
 
-              {/* Location */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <MapPin className="w-4 h-4 inline mr-2" />
@@ -326,7 +330,6 @@ export default function AuthPage() {
                 />
               </div>
 
-              {/* Age */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Calendar className="w-4 h-4 inline mr-2" />
@@ -344,7 +347,6 @@ export default function AuthPage() {
                 />
               </div>
 
-              {/* Current Status */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Current Status *
@@ -364,7 +366,6 @@ export default function AuthPage() {
                 </select>
               </div>
 
-              {/* Buttons */}
               <div className="flex gap-4">
                 <button
                   type="button"

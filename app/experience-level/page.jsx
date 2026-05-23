@@ -13,7 +13,10 @@ export default function ExperienceLevel() {
   const [selectedLevel, setSelectedLevel] = useState('')
   const [uploadedFile, setUploadedFile] = useState(null)
   const [isProcessingFile, setIsProcessingFile] = useState(false)
-  const [currentStep, setCurrentStep] = useState('selection') // selection, upload, processing
+  const [currentStep, setCurrentStep] =
+    useState("selection");
+  const [extractedSkills, setExtractedSkills] =
+    useState([]);
 
   useEffect(() => {
     const domain = searchParams.get('domain')
@@ -146,33 +149,76 @@ export default function ExperienceLevel() {
   }
 
   const processFile = async () => {
-    if (!uploadedFile) return
-    
-    setIsProcessingFile(true)
-    setCurrentStep('processing')
+  if (!uploadedFile) return;
 
-    try {
-      // fake delay (simulate API)
-      await new Promise(resolve => setTimeout(resolve, 2000)) // 2 sec loading
+  setIsProcessingFile(true);
+  setCurrentStep("processing");
 
-      // store minimal data for dashboard (optional)
-      localStorage.setItem('resumeAnalysis', JSON.stringify({
+  try {
+    const formData = new FormData();
+    formData.append("resume", uploadedFile);
+
+    const response = await fetch(
+      "/api/aiMentor/processResume",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+    const data = await response.json();
+
+    // Handle API failure
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Resume parsing failed"
+      );
+    }
+
+    console.log(
+      "Extracted skills:",
+      data.extractedSkills
+    );
+
+    // Save result
+    localStorage.setItem(
+      "resumeAnalysis",
+      JSON.stringify({
         fileName: uploadedFile.name,
+        extractedSkills:
+          data.extractedSkills || [],
         domain: selectedDomain,
         level: selectedLevel,
-        timestamp: new Date().toISOString()
-      }))
+        timestamp:
+          new Date().toISOString()
+      })
+    );
 
-      // navigate directly
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Resume processing error:', error)
-      alert('Something went wrong. Please try again.')
-      setCurrentStep('upload')
-    } finally {
-      setIsProcessingFile(false)
-    }
+    // Redirect after success
+    setExtractedSkills(
+      data.extractedSkills || []
+      );
+
+    setCurrentStep("results");
+
+  } catch (error) {
+    console.error(
+      "Resume processing error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Resume analysis failed"
+    );
+
+    // Reset UI properly
+    setCurrentStep("upload");
+    setIsProcessingFile(false);
+  } finally {
+    setIsProcessingFile(false);
   }
+};
 
   const goBack = () => {
     if (currentStep === 'upload') {
@@ -346,6 +392,91 @@ export default function ExperienceLevel() {
       </div>
     )
   }
+  if (currentStep === "results") {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
+      <div className="max-w-4xl mx-auto px-6">
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-10"
+        >
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Resume Analysis Complete
+          </h1>
+
+          <p className="text-lg text-gray-600">
+            We extracted the following skills from your resume
+          </p>
+        </motion.div>
+
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+
+          <h3 className="text-xl font-semibold mb-6 text-gray-800">
+            Extracted Skills
+          </h3>
+
+          <div className="flex flex-wrap gap-3 mb-8">
+            {extractedSkills.length > 0 ? (
+              extractedSkills.map((skill, index) => (
+                <div
+                  key={index}
+                  className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium"
+                >
+                  {skill}
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">
+                No skills found
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center">
+
+            <button
+              onClick={() => {
+                setCurrentStep("upload");
+              }}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+
+            <button
+              onClick={() => {
+
+                localStorage.setItem(
+                  "resumeAnalysis",
+                  JSON.stringify({
+                    fileName: uploadedFile?.name,
+                    extractedSkills,
+                    domain: selectedDomain,
+                    level: selectedLevel,
+                    timestamp:
+                      new Date().toISOString()
+                  })
+                );
+
+                router.push("/dashboard");
+              }}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              Continue to Dashboard
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   // Experience Level Selection Step
   return (
